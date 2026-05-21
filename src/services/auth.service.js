@@ -4,6 +4,7 @@ const roleRepository = require('../repositories/role.repository');
 const jwtUtil = require('../utils/jwt.util');
 
 class AuthService {
+
   async register(userData) {
     try {
       let { fullname, email, password, phone, address, position, role } = userData;
@@ -63,13 +64,14 @@ class AuthService {
         role: savedUser.role
       };
 
-      const token = jwtUtil.generateToken(payload);
+      const accessToken = jwtUtil.generateAccessToken(payload);
+      const refreshToken = jwtUtil.generateRefreshToken(payload);
 
       // Return user data without password
       const userResponse = savedUser.toObject();
       delete userResponse.password;
 
-      return { userResponse, token };
+      return { userResponse, accessToken, refreshToken };
     } catch (error) {
       throw error;
     }
@@ -103,13 +105,44 @@ class AuthService {
         email: user.email,
         role: user.role
       };
-      const token = jwtUtil.generateToken(payload);
+      const accessToken = jwtUtil.generateAccessToken(payload);
+      const refreshToken = jwtUtil.generateRefreshToken(payload);
 
       // Return user data without password
       const userResponse = user.toObject();
       delete userResponse.password;
 
-      return { userResponse, token };
+      return { userResponse, accessToken, refreshToken };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async refreshToken({ data }) {
+    try {
+      const { refreshToken } = data;
+
+      // Validate input
+      if(!refreshToken) {
+        const error = new Error('Refresh token không được cung cấp');
+        error.statusCode = 400;
+        error.errorType = 'Bad Request';
+        throw error;
+      }
+
+      // Verify refresh token
+      const decoded = jwtUtil.verifyRefreshToken(refreshToken);
+
+      // Generate new access token
+      const payload = {
+        id: decoded.id,
+        email: decoded.email,
+        role: decoded.role
+      };
+      const newAccessToken = jwtUtil.generateAccessToken(payload);
+      const newRefreshToken = jwtUtil.generateRefreshToken(payload);
+      return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+
     } catch (error) {
       throw error;
     }

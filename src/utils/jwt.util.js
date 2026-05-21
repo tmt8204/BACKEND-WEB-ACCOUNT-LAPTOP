@@ -2,16 +2,30 @@ const jwt = require('jsonwebtoken');
 
 class JWTUtil {
     // Generate JWT token
-    generateToken = (payload) => {
-        return jwt.sign(payload, process.env.JWT_SECRET, { 
-            expiresIn: process.env.JWT_EXPIRES_IN 
+    generateAccessToken = (payload) => {
+        return jwt.sign(payload, process.env.JWT_ACCESS_SECRET, { 
+            expiresIn: process.env.JWT_ACCESS_EXPIRES
+        });
+    };
+
+    generateRefreshToken = (payload) => {
+        return jwt.sign(payload, process.env.JWT_REFRESH_SECRET, { 
+            expiresIn: process.env.JWT_REFRESH_EXPIRES
         });
     };
 
     // Verify JWT token
-    verifyToken = (token) => {
+    verifyAccessToken = (token) => {
         try {
-            return jwt.verify(token, process.env.JWT_SECRET);
+            return jwt.verify(token, process.env.JWT_ACCESS_SECRET);
+        } catch (error) {
+            throw error;
+        }
+    };
+
+    verifyRefreshToken = (token) => {
+        try {
+            return jwt.verify(token, process.env.JWT_REFRESH_SECRET);
         } catch (error) {
             throw error;
         }
