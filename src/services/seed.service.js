@@ -30,8 +30,7 @@ class SeedService {
 
   async initializeAdminAccount() {
     try {
-      const adminEmail = 'admin';
-      const existingAdmin = await userRepository.findUserByEmail(adminEmail);
+      const existingAdmin = await userRepository.findUserByEmail(process.env.ADMIN_EMAIL);
       
       if (!existingAdmin) {
         const adminRole = await roleRepository.findRoleByName('admin');
@@ -41,23 +40,22 @@ class SeedService {
         }
 
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash('admin', salt);
+        const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, salt);
 
         const adminUser = {
-          fullname: 'Admin System',
-          email: adminEmail,
+          fullname: process.env.ADMIN_FULLNAME,
+          email: process.env.ADMIN_EMAIL,
           password: hashedPassword,
-          phone: '0000000001',
-          address: 'System',
-          position: 'Administrator',
-          role: adminRole._id,
-          active: true
+          phone: process.env.ADMIN_PHONE,
+          address: process.env.ADMIN_ADDRESS,
+          position: process.env.ADMIN_POSITION,
+          role: adminRole._id
         };
 
         await userRepository.createUser(adminUser);
         console.log('✓ Admin account created successfully');
-        console.log(`  Email: ${adminEmail}`);
-        console.log(`  Password: admin`);
+        console.log(`  Email: ${process.env.ADMIN_EMAIL}`);
+        console.log(`  Password: ${process.env.ADMIN_PASSWORD}`);
       }
     } catch (error) {
       console.error('Error initializing admin account:', error.message);
