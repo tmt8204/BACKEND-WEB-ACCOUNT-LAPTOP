@@ -23,10 +23,11 @@ const userSchema = new mongoose.Schema({
     },
     address: {
         type: String,
-        required: true
+        default: null
     },
     position: {
-        type: String
+        type: String,
+        default: null
     },
     isActive: {
         type: Boolean,
@@ -38,12 +39,27 @@ const userSchema = new mongoose.Schema({
     },
     otp: {
         type: String,
+        default: null
     },
     otpExpiresAt: {
         type: Date,
+        default: null
     },
     otpSentAt: {
         type: Date,
+        default: null
+    },
+    resetOtp: {
+        type: String,
+        default: null
+    },
+    resetOtpExpiresAt: {
+        type: Date,
+        default: null
+    },
+    resetOtpSentAt: {
+        type: Date,
+        default: null
     },
     role: {
         type: mongoose.Schema.Types.ObjectId,

@@ -181,7 +181,136 @@ class AuthService {
     }
   }
 
-  //============== VERIFY OTP ==============//
+  //============== RESET PASSWORD ==============//
+  async forgotPassword({ email }) {
+    try {
+
+      // Find user by email
+      const user = await userRepository.findUserByEmail(email);
+
+      if (!user) {
+        const error = new Error('Email không tồn tại');
+        error.statusCode = 404;
+        error.errorType = 'NotFound';
+        throw error;
+      }
+
+      // Check spam prevention (e.g., allow request only every 1 day)
+      const now = new Date();
+      if (user.resetOtpSentAt && (now - user.resetOtpSentAt) < 24 * 60 * 60 * 1000) {
+        const error = new Error('Vui lòng đợi 24 giờ trước khi yêu cầu đặt lại mật khẩu lần nữa');
+        error.statusCode = 429;
+        error.errorType = 'TooManyRequests';
+        throw error;
+      }
+
+      // Generate password reset token (could be a JWT or a random string)
+      const resetToken = otpUtil.generateOTP(); // For simplicity, using OTP as reset token
+      const resetTokenExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // Token expires in 5 minutes
+
+      // Update user with reset token
+      user.resetOtp = resetToken;
+      user.resetOtpExpiresAt = resetTokenExpiresAt;
+      user.resetOtpSentAt = now;
+      await user.save();
+
+      // Send password reset email
+      await mailUtil.sendOTP(user.email, user.resetOtp);
+
+      return { message: 'Yêu cầu đặt lại mật khẩu thành công. Vui lòng kiểm tra email của bạn' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async verifyResetOTP({ email, otp }) {
+    try {
+      // Find user by email
+      const user = await userRepository.findUserByEmail(email);
+
+      // Check if user exists
+      if (!user) {
+        const error = new Error('Email không tồn tại');
+        error.statusCode = 404;
+        error.errorType = 'NotFound';
+        throw error;
+      }
+
+      // Check if OTP matches and is not expired
+      if (user.resetOtp !== otp) {
+        const error = new Error('OTP không đúng');
+        error.statusCode = 400;
+        error.errorType = 'BadRequest';
+        throw error;
+      }
+
+      if (!user.resetOtpExpiresAt || user.resetOtpExpiresAt < new Date()) {
+        // Clear expired OTP
+        user.resetOtp = null;
+        user.resetOtpExpiresAt = null;
+        user.resetOtpSentAt = null;
+        await user.save();
+
+        const error = new Error('OTP đã hết hạn');
+        error.statusCode = 400;
+        error.errorType = 'BadRequest';
+        throw error;
+      }
+
+      return { message: 'Xác thực OTP đặt lại mật khẩu thành công' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+
+  async resetPassword({ email, otp, newPassword }) {
+    try {
+      // Find user by email
+      const user = await userRepository.findUserByEmail(email);
+
+      // Check if user exists
+      if (!user) {
+        const error = new Error('Email không tồn tại');
+        error.statusCode = 404;
+        error.errorType = 'NotFound';
+        throw error;
+      }
+
+      if (user.resetOtp !== otp) {
+        const error = new Error('OTP không đúng');
+        error.statusCode = 400;
+        error.errorType = 'BadRequest';
+        throw error;
+      }
+
+      if (!user.resetOtpExpiresAt || user.resetOtpExpiresAt < new Date()) {
+        // Clear expired OTP
+        user.resetOtp = null;
+        user.resetOtpExpiresAt = null;
+        user.resetOtpSentAt = null;
+        await user.save();
+
+        const error = new Error('OTP đã hết hạn');
+        error.statusCode = 400;
+        error.errorType = 'BadRequest';
+        throw error;
+      }
+
+      // Update user's password
+      user.password = await bcrypt.hash(newPassword, 10);
+      user.resetOtp = null;
+      user.resetOtpExpiresAt = null;
+      user.resetOtpSentAt = null;
+      await user.save();
+
+      return { message: 'Đặt lại mật khẩu thành công' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  //============== OTP ==============//
   async verifyOTP(data) {
     try {
       const { email, otp } = data;
@@ -234,7 +363,7 @@ class AuthService {
     }
   }
 
-  async resendOTP(data) {
+  async sendOTP(data) {
     try {
       const { email } = data;
 
@@ -259,7 +388,7 @@ class AuthService {
 
       // Generate new OTP
       const otp = otpUtil.generateOTP();
-      const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP expires in 10 minutes
+      const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000); // OTP expires in 5 minutes
       const otpSentAt = new Date();
 
       // Update user with new OTP
@@ -277,6 +406,7 @@ class AuthService {
     }
   }
 
+  //============== HELPER METHODS ==============//
   async comparePassword(password, hashedPassword) {
     try {
       if (!password || !hashedPassword) {

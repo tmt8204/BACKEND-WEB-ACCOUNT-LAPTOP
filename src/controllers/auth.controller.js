@@ -11,8 +11,7 @@ class AuthController {
         fullname,
         email,
         password,
-        phone,
-        address
+        phone
       });
 
       // Send success response
@@ -40,9 +39,55 @@ class AuthController {
     }
   }
 
+  async forgotPassword(req, res, next) {
+    try {
+      const { email } = req.body;
+
+      const result = await authService.forgotPassword({ email });
+
+      return res.status(200).json(
+        ApiResponse.success(200, 'Yêu cầu đặt lại mật khẩu thành công. Vui lòng kiểm tra email của bạn', result)
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async verifyResetOTP(req, res, next) {
+    try {
+      const { email, otp } = req.body;
+
+      const result = await authService.verifyResetOTP({ email, otp });
+
+      return res.status(200).json(
+        ApiResponse.success(200, 'Xác thực OTP đặt lại mật khẩu thành công', result)
+      )
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async resetPassword(req, res, next) {
+    try {
+      const { email, otp, newPassword } = req.body;
+
+      // Reset password
+      const result = await authService.resetPassword({ email, otp, newPassword });
+
+      // Send success response
+      return res.status(200).json(
+        ApiResponse.success(200, 'Đặt lại mật khẩu thành công', result)
+      )
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async refreshToken(req, res, next) {
     try {
-      const result = await authService.refreshToken(req.body);
+      const { refreshToken } = req.body;
+
+      const result = await authService.refreshToken({ refreshToken });
 
       return res.status(200).json(
         ApiResponse.success(200, 'Làm mới token thành công', { accessToken: result.accessToken, refreshToken: result.refreshToken })
@@ -54,7 +99,9 @@ class AuthController {
 
   async verifyEmail(req, res, next) {
     try {
-      const result = await authService.verifyOTP(req.body);
+      const { email, otp } = req.body;
+
+      const result = await authService.verifyOTP({ email, otp });
 
       return res.status(200).json(
         ApiResponse.success(200, 'Xác thực OTP thành công', result)
@@ -64,9 +111,11 @@ class AuthController {
     }
   }
 
-  async resendOTP(req, res, next) {
+  async sendOTP(req, res, next) {
     try {
-      const result = await authService.resendOTP(req.body);
+      const { email } = req.body;
+
+      const result = await authService.sendOTP({ email });
 
       return res.status(200).json(
         ApiResponse.success(200, 'Gửi lại OTP thành công', result)
