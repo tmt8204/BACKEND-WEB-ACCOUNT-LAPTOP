@@ -28,9 +28,22 @@ const userSchema = new mongoose.Schema({
     position: {
         type: String
     },
-    active: {
+    isActive: {
         type: Boolean,
         default: true
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    otp: {
+        type: String,
+    },
+    otpExpiresAt: {
+        type: Date,
+    },
+    otpSentAt: {
+        type: Date,
     },
     role: {
         type: mongoose.Schema.Types.ObjectId,

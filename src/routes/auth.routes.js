@@ -12,4 +12,16 @@ router.post('/login', validateLogin, (req, res, next) => {
   authController.login(req, res, next);
 });
 
+router.post('/refresh-token', (req, res, next) => {
+  authController.refreshToken(req, res, next);
+});
+
+router.post('/verify-email', (req, res, next) => {
+  authController.verifyEmail(req, res, next);
+});
+
+router.post('/resend-otp', (req, res, next) => {
+  authController.resendOTP(req, res, next);
+});
+
 module.exports = router;

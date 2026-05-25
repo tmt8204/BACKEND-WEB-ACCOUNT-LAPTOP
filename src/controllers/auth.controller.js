@@ -42,10 +42,35 @@ class AuthController {
 
   async refreshToken(req, res, next) {
     try {
-      const result =
-        await authService.refreshToken(req.body);
+      const result = await authService.refreshToken(req.body);
 
-      return res.status(200).json(result);
+      return res.status(200).json(
+        ApiResponse.success(200, 'Làm mới token thành công', { accessToken: result.accessToken, refreshToken: result.refreshToken })
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async verifyEmail(req, res, next) {
+    try {
+      const result = await authService.verifyOTP(req.body);
+
+      return res.status(200).json(
+        ApiResponse.success(200, 'Xác thực OTP thành công', result)
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async resendOTP(req, res, next) {
+    try {
+      const result = await authService.resendOTP(req.body);
+
+      return res.status(200).json(
+        ApiResponse.success(200, 'Gửi lại OTP thành công', result)
+      );
     } catch (error) {
       next(error);
     }

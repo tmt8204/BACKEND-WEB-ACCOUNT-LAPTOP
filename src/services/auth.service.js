@@ -2,9 +2,12 @@ const bcrypt = require('bcryptjs');
 const userRepository = require('../repositories/user.repository');
 const roleRepository = require('../repositories/role.repository');
 const jwtUtil = require('../utils/jwt.util');
+const otpUtil = require('../utils/otp.util');
+const mailUtil = require('../utils/mail.util');
 
 class AuthService {
 
+  //============== REGISTER ==============//
   async register(userData) {
     try {
       let { fullname, email, password, phone, address, position, role } = userData;
@@ -39,6 +42,11 @@ class AuthService {
         role = customerRole._id;
       }
 
+      // Generate OTP for email verification (optional)
+      const otp = otpUtil.generateOTP();
+      const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP expires in 10 minutes
+      const otpSentAt = new Date();
+
       // Hash password
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
@@ -51,11 +59,17 @@ class AuthService {
         phone,
         address,
         position,
-        role
+        role,
+        otp,
+        otpExpiresAt,
+        otpSentAt
       };
 
       // Save to database
       const savedUser = await userRepository.createUser(newUser);
+
+      // Send verification email
+      await mailUtil.sendOTP(savedUser.email, savedUser.otp);
 
       // Generate JWT token (optional, can be returned on login instead)
       const payload = {
@@ -77,6 +91,7 @@ class AuthService {
     }
   }
 
+  //============== LOGIN ==============//
   async login(userData) {
     try {
       const { email, password } = userData;
@@ -99,6 +114,22 @@ class AuthService {
         throw error;
       }
 
+      // Check if user is active
+      if (!user.isActive) {
+        const error = new Error('Tài khoản của bạn đã bị khóa');
+        error.statusCode = 403;
+        error.errorType = 'Forbidden';
+        throw error;
+      }
+
+      // Check if user is verified (if OTP verification is implemented)
+      if (!user.isVerified) {
+        const error = new Error('Tài khoản của bạn chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản');
+        error.statusCode = 403;
+        error.errorType = 'Forbidden';
+        throw error;
+      }
+
       // Generate JWT token
       const payload = {
         id: user._id,
@@ -118,6 +149,8 @@ class AuthService {
     }
   }
 
+
+  //============== REFRESH TOKEN ==============//
   async refreshToken({ data }) {
     try {
       const { refreshToken } = data;
@@ -143,6 +176,102 @@ class AuthService {
       const newRefreshToken = jwtUtil.generateRefreshToken(payload);
       return { accessToken: newAccessToken, refreshToken: newRefreshToken };
 
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  //============== VERIFY OTP ==============//
+  async verifyOTP(data) {
+    try {
+      const { email, otp } = data;
+
+      // Find user by email
+      const user = await userRepository.findUserByEmail(email);
+
+      // Check if user exists
+      if (!user) {
+        const error = new Error('Email không tồn tại');
+        error.statusCode = 404;
+        error.errorType = 'NotFound';
+        throw error;
+      }
+
+      // Check if OTP matches and is not expired
+      if (user.otp !== otp) {
+        const error = new Error('OTP không đúng');
+        error.statusCode = 400;
+        error.errorType = 'BadRequest';
+        throw error;
+      }
+
+      // Check if OTP is expired
+      if (!user.otpExpiresAt || user.otpExpiresAt < new Date()) {
+
+        // Clear expired OTP
+        user.otp = null;
+        user.otpExpiresAt = null;
+        user.otpSentAt = null;
+        await user.save();
+
+        const error = new Error('OTP đã hết hạn');
+        error.statusCode = 400;
+        error.errorType = 'BadRequest';
+        throw error;
+      }
+
+      // Mark user as verified and clear OTP
+      user.isVerified = true;
+      user.otp = null;
+      user.otpExpiresAt = null;
+      user.otpSentAt = null;
+
+      await user.save();
+
+      return { message: 'Xác thực OTP thành công' };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async resendOTP(data) {
+    try {
+      const { email } = data;
+
+      // Find user by email
+      const user = await userRepository.findUserByEmail(email);
+
+      if(!user) {
+        const error = new Error('Email không tồn tại');
+        error.statusCode = 404;
+        error.errorType = 'NotFound';
+        throw error;
+      }
+
+      // Check spam prevention (e.g., allow resend only every 1 minute)
+      const now = new Date();
+      if (user.otpSentAt && (now - user.otpSentAt) < 60 * 1000) {
+        const error = new Error('Vui lòng đợi 1 phút trước khi gửi lại OTP');
+        error.statusCode = 429;
+        error.errorType = 'TooManyRequests';
+        throw error;
+      }
+
+      // Generate new OTP
+      const otp = otpUtil.generateOTP();
+      const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // OTP expires in 10 minutes
+      const otpSentAt = new Date();
+
+      // Update user with new OTP
+      user.otp = otp;
+      user.otpExpiresAt = otpExpiresAt;
+      user.otpSentAt = otpSentAt;
+      await user.save();
+
+      // Send verification email
+      await mailUtil.sendOTP(user.email, user.otp);
+
+      return { message: 'OTP đã được gửi lại thành công' };
     } catch (error) {
       throw error;
     }
