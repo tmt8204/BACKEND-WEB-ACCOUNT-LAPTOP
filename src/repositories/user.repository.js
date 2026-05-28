@@ -59,6 +59,19 @@ class UserRepository {
       throw error;
     }
   }
+
+  async updateUserProfile(userId, updateData) {
+    try {
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        updateData,
+        { new: true }
+      );
+      return updatedUser;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 module.exports = new UserRepository();

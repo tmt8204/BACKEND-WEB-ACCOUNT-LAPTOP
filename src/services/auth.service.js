@@ -142,6 +142,7 @@ class AuthService {
       // Return user data without password
       const userResponse = user.toObject();
       delete userResponse.password;
+      delete userResponse.refreshToken;
 
       return { userResponse, accessToken, refreshToken };
     } catch (error) {
