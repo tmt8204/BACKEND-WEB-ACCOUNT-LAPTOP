@@ -23,7 +23,7 @@ const verifyToken = (req, res, next) => {
     const token = parts[1];
 
     // Verify token
-    const decoded = jwtUtil.verifyToken(token);
+    const decoded = jwtUtil.verifyAccessToken(token);
     
     // Attach user info to request
     req.user = decoded;

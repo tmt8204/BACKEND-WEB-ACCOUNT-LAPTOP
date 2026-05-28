@@ -78,14 +78,11 @@ class AuthService {
         role: savedUser.role
       };
 
-      const accessToken = jwtUtil.generateAccessToken(payload);
-      const refreshToken = jwtUtil.generateRefreshToken(payload);
-
       // Return user data without password
       const userResponse = savedUser.toObject();
       delete userResponse.password;
 
-      return { userResponse, accessToken, refreshToken };
+      return { userResponse };
     } catch (error) {
       throw error;
     }
@@ -139,6 +136,9 @@ class AuthService {
       const accessToken = jwtUtil.generateAccessToken(payload);
       const refreshToken = jwtUtil.generateRefreshToken(payload);
 
+      // Save refresh token to database
+      await userRepository.updateRefreshToken(user._id, refreshToken);
+
       // Return user data without password
       const userResponse = user.toObject();
       delete userResponse.password;
@@ -151,7 +151,7 @@ class AuthService {
 
 
   //============== REFRESH TOKEN ==============//
-  async refreshToken({ data }) {
+  async refreshToken(data) {
     try {
       const { refreshToken } = data;
 
@@ -161,10 +161,28 @@ class AuthService {
         error.statusCode = 400;
         error.errorType = 'Bad Request';
         throw error;
-      }
+      }      
 
       // Verify refresh token
       const decoded = jwtUtil.verifyRefreshToken(refreshToken);
+
+      // Find user by ID from token
+      const user = await userRepository.findUserById(decoded.id);
+
+      if (!user) {
+        const error = new Error('Người dùng không tồn tại');
+        error.statusCode = 404;
+        error.errorType = 'Not Found';
+        throw error;
+      }
+
+      // Check if refresh token matches the one in database
+      if (user.refreshToken !== refreshToken) {
+        const error = new Error('Refresh token không hợp lệ');
+        error.statusCode = 401;
+        error.errorType = 'Unauthorized';
+        throw error;
+      }
 
       // Generate new access token
       const payload = {
@@ -172,10 +190,14 @@ class AuthService {
         email: decoded.email,
         role: decoded.role
       };
+
       const newAccessToken = jwtUtil.generateAccessToken(payload);
       const newRefreshToken = jwtUtil.generateRefreshToken(payload);
-      return { accessToken: newAccessToken, refreshToken: newRefreshToken };
 
+      // Update refresh token in database
+      await userRepository.updateRefreshToken(decoded.id, newRefreshToken);
+
+      return { accessToken: newAccessToken, refreshToken: newRefreshToken };
     } catch (error) {
       throw error;
     }

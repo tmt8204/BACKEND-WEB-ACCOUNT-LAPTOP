@@ -46,6 +46,19 @@ class UserRepository {
       throw error;
     }
   }
+
+  async updateRefreshToken(userId, refreshToken) {
+    try {
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { refreshToken: refreshToken },
+        { new: true }
+      );
+      return updatedUser;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 module.exports = new UserRepository();

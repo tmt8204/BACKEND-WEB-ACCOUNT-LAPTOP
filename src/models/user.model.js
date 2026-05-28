@@ -61,6 +61,10 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: null
     },
+    refreshToken: {
+        type: String,
+        default: null
+    },
     role: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Role',
