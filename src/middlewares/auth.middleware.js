@@ -1,7 +1,8 @@
 const jwtUtil = require('../utils/jwt.util');
 const ApiResponse = require('../utils/api.response');
+const roleRepository = require('../repositories/role.repository');
 
-const verifyToken = (req, res, next) => {
+const authenticate = (req, res, next) => {
   try {
     // Get token from Authorization header
     const authHeader = req.headers.authorization;
@@ -47,6 +48,23 @@ const verifyToken = (req, res, next) => {
   }
 };
 
+const authorizeRoles = (allowedRoles) => async (req, res, next) => {
+  try {
+    console.log('User role from token:', req.user.role);
+
+    if (!allowedRoles.includes(req.user.role)) {
+        return res.status(403).json(
+            ApiResponse.error(403, 'Bạn không có quyền truy cập tài nguyên này', 'Forbidden')
+        );
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
-  verifyToken
+  authenticate,
+  authorizeRoles
 };

@@ -32,6 +32,21 @@ class UserController {
             next(error);
         }
     }
+
+    async changePassword(req, res, next) {
+        try {
+            const userId = req.user.id; // Get user ID from authenticated token
+            const { currentPassword, newPassword } = req.body;
+
+            const result = await userService.changePassword({ userId, currentPassword, newPassword });
+
+            return res.status(200).json(
+                ApiResponse.success(200, 'Đổi mật khẩu thành công', result)
+            );
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new UserController();

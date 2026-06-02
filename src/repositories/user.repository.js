@@ -40,7 +40,7 @@ class UserRepository {
 
   async findUserById(id) {
     try {
-      const user = await User.findById(id).populate('role');
+      const user = await User.findById(id).populate('role').select('+password');
       return user;
     } catch (error) {
       throw error;

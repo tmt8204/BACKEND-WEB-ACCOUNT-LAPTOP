@@ -106,14 +106,6 @@ const newPasswordSchema = Joi.object({
             'string.email': 'Email không hợp lệ',
             'any.required': 'Email là bắt buộc'
         }),
-    otp: Joi.string()
-        .length(6)
-        .required()
-        .messages({
-            'string.empty': 'OTP không được để trống',
-            'string.length': 'OTP phải có 6 ký tự',
-            'any.required': 'OTP là bắt buộc'
-        }),
     newPassword: Joi.string()
         .min(8)
         .required()

@@ -1,9 +1,9 @@
-const bcrypt = require('bcryptjs');
 const userRepository = require('../repositories/user.repository');
 const roleRepository = require('../repositories/role.repository');
 const jwtUtil = require('../utils/jwt.util');
 const otpUtil = require('../utils/otp.util');
 const mailUtil = require('../utils/mail.util');
+const passwordUtil = require('../utils/password.util');
 
 class AuthService {
 
@@ -48,8 +48,7 @@ class AuthService {
       const otpSentAt = new Date();
 
       // Hash password
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
+      const hashedPassword = await passwordUtil.hashPassword(password);
 
       // Create user object
       const newUser = {
@@ -70,13 +69,6 @@ class AuthService {
 
       // Send verification email
       await mailUtil.sendOTP(savedUser.email, savedUser.otp);
-
-      // Generate JWT token (optional, can be returned on login instead)
-      const payload = {
-        id: savedUser._id,
-        email: savedUser.email,
-        role: savedUser.role
-      };
 
       // Return user data without password
       const userResponse = savedUser.toObject();
@@ -103,7 +95,7 @@ class AuthService {
       }
 
       // Compare password
-      const isMatch = await this.comparePassword(password, user.password);
+      const isMatch = await passwordUtil.comparePassword(password, user.password);
       if (!isMatch) {
         const error = new Error('Email hoặc mật khẩu không đúng');
         error.statusCode = 401;
@@ -128,11 +120,14 @@ class AuthService {
       }
 
       // Generate JWT token
+      const userWithRole = await userRepository.findUserById(user._id); // Fetch user with populated role
+
       const payload = {
         id: user._id,
         email: user.email,
-        role: user.role
+        role: userWithRole.role.name
       };
+
       const accessToken = jwtUtil.generateAccessToken(payload);
       const refreshToken = jwtUtil.generateRefreshToken(payload);
 
@@ -218,10 +213,10 @@ class AuthService {
         throw error;
       }
 
-      // Check spam prevention (e.g., allow request only every 1 day)
+      // Check spam prevention (e.g., allow request only every 1 minute)
       const now = new Date();
-      if (user.resetOtpSentAt && (now - user.resetOtpSentAt) < 24 * 60 * 60 * 1000) {
-        const error = new Error('Vui lòng đợi 24 giờ trước khi yêu cầu đặt lại mật khẩu lần nữa');
+      if (user.resetOtpSentAt && (now - user.resetOtpSentAt) < 1 * 60 * 1000) {
+        const error = new Error('Vui lòng đợi 1 phút trước khi yêu cầu đặt lại mật khẩu lần nữa');
         error.statusCode = 429;
         error.errorType = 'TooManyRequests';
         throw error;
@@ -280,6 +275,10 @@ class AuthService {
         throw error;
       }
 
+      // Mark OTP as verified (you can also set a flag if needed)
+      user.isResetVerified = true;
+      await user.save();
+
       return { message: 'Xác thực OTP đặt lại mật khẩu thành công' };
     } catch (error) {
       throw error;
@@ -287,7 +286,7 @@ class AuthService {
   }
 
 
-  async resetPassword({ email, otp, newPassword }) {
+  async resetPassword({ email, newPassword }) {
     try {
       // Find user by email
       const user = await userRepository.findUserByEmail(email);
@@ -300,31 +299,19 @@ class AuthService {
         throw error;
       }
 
-      if (user.resetOtp !== otp) {
-        const error = new Error('OTP không đúng');
-        error.statusCode = 400;
-        error.errorType = 'BadRequest';
-        throw error;
-      }
-
-      if (!user.resetOtpExpiresAt || user.resetOtpExpiresAt < new Date()) {
-        // Clear expired OTP
-        user.resetOtp = null;
-        user.resetOtpExpiresAt = null;
-        user.resetOtpSentAt = null;
-        await user.save();
-
-        const error = new Error('OTP đã hết hạn');
+      if (!user.isResetVerified) {
+        const error = new Error('Vui lòng xác thực OTP trước khi đặt lại mật khẩu');
         error.statusCode = 400;
         error.errorType = 'BadRequest';
         throw error;
       }
 
       // Update user's password
-      user.password = await bcrypt.hash(newPassword, 10);
+      user.password = await passwordUtil.hashPassword(newPassword);
       user.resetOtp = null;
       user.resetOtpExpiresAt = null;
       user.resetOtpSentAt = null;
+      user.isResetVerified = false;
       await user.save();
 
       return { message: 'Đặt lại mật khẩu thành công' };
@@ -424,18 +411,6 @@ class AuthService {
       await mailUtil.sendOTP(user.email, user.otp);
 
       return { message: 'OTP đã được gửi lại thành công' };
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  //============== HELPER METHODS ==============//
-  async comparePassword(password, hashedPassword) {
-    try {
-      if (!password || !hashedPassword) {
-        throw new Error('Password và hashedPassword không được để trống');
-      }
-      return await bcrypt.compare(password, hashedPassword);
     } catch (error) {
       throw error;
     }

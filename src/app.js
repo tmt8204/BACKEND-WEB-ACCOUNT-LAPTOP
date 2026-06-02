@@ -2,8 +2,9 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const connectDB = require("./configs/mongodb.config");
-const authRoutes = require("./routes/auth.routes");
-const userRoutes = require("./routes/user.routes");
+const authRoutes = require("./routes/auth.route");
+const userRoutes = require("./routes/user.route");
+const productRoutes = require("./routes/product.route");
 const { errorHandler } = require("./middlewares/error.handler");
 
 const app = express();
@@ -21,6 +22,9 @@ app.use("/api/v1/auth", authRoutes);
 
 // User routes (protected)
 app.use("/api/v1/user", userRoutes);
+
+// Product routes
+app.use("/api/v1/product", productRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

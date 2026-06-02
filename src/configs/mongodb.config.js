@@ -6,6 +6,15 @@ const connectDB = async () => {
     
     await mongoose.connect(mongoUri);
     console.log('MongoDB connected successfully');
+
+    mongoose.connection.on('disconnected', () => {
+      console.warn('MongoDB disconnected. Retrying...');
+    });
+
+    mongoose.connection.on('error', (err) => {
+            console.error('MongoDB error:', err.message);
+    });
+    
     return mongoose.connection;
   } catch (error) {
     console.error('MongoDB connection error:', error.message);

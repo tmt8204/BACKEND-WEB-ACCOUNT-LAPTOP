@@ -49,7 +49,8 @@ class SeedService {
           phone: process.env.ADMIN_PHONE,
           address: process.env.ADMIN_ADDRESS,
           position: process.env.ADMIN_POSITION,
-          role: adminRole._id
+          role: adminRole._id,
+          isVerified: true
         };
 
         await userRepository.createUser(adminUser);
