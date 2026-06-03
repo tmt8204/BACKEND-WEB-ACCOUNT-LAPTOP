@@ -1,12 +1,17 @@
 require("dotenv").config();
-const app = require("./app");
 
-const PORT = process.env.PORT;
+const app = require("./app");
+const seedService = require("./services/seed.service");
+
+const PORT = process.env.PORT || 3000;
+
 // Start server and seed database
 const startServer = async () => {
   try {
     // Wait a moment for MongoDB connection to be established
     setTimeout(async () => {
+      await seedService.seed();
+      
       app.listen(PORT, () => {
         console.log(`Server running at port: ${PORT}`);
       });
