@@ -28,6 +28,30 @@ const createPhysicalProductSchema = Joi.object({
     }).required()
 });
 
+const createDigitalProductSchema = Joi.object({
+    productData: Joi.object({
+        name:        Joi.string().min(3).max(100).required(),
+        description: Joi.string().max(500).allow('').optional(),
+        base_price:  Joi.number().min(0).required()
+    }).required(),
+
+    digitalData: Joi.object({
+        platform:      Joi.string().required(),          // 'Netflix', 'Spotify'
+        category:      Joi.string().required(),          // 'Streaming', 'Music'
+        region:        Joi.string().required(),          // 'VN', 'Global'
+        duration_months: Joi.number().integer().min(1).required()
+    }).required(),
+
+    itemData: Joi.object({
+        account_email:    Joi.string().email().required(),
+        account_password: Joi.string().min(1).required(),
+        expired_at:       Joi.date().iso().optional(),
+        status:           Joi.string().valid('available', 'reserved', 'sold').optional(),
+        sale_price:       Joi.number().min(0).required()
+    }).required()
+});
+
 module.exports = { 
-    createPhysicalProductSchema 
+    createPhysicalProductSchema,
+    createDigitalProductSchema
 };
