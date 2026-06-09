@@ -2,70 +2,39 @@ const productRepository = require('../repositories/product.repository');
 
 class ProductService {
 
-    // Create a new physical product along with its physical product details and item
+    // ───────────────────────── CREATE ─────────────────────────
+
     async createPhysicalProduct(productData, physicalData, itemData) {
         try {
-            // Prepare the data for the main product
             const product = {
                 name: productData.name,
                 description: productData.description,
                 base_price: productData.base_price,
                 product_type: 'physical'
             };
-
-            // Prepare the physical product details
-            const physical = {
-                brand: physicalData.brand,
-                model: physicalData.model,
-                weight_kg: physicalData.weight_kg,
-                cpu: physicalData.cpu,
-                gpu: physicalData.gpu,
-                ram: physicalData.ram,
-                storage: physicalData.storage,
-                display_inches: physicalData.display_inches,
-                os: physicalData.os,
-                condition_percent: physicalData.condition_percent,
-                warranty_months: physicalData.warranty_months,
-                important_price: physicalData.important_price
-            };
-
-            // Prepare the physical product item details
+            const physical = { ...physicalData };
             const item = {
                 serial_number: itemData.serial_number,
                 images_urls: itemData.images_urls || [],
                 status: itemData.status || 'available',
                 sale_price: itemData.sale_price
-            }
-
-            // Create the physical product along with its details and item in a transaction
+            };
             const newProduct = await productRepository.createPhysicalProduct(product, physical, item);
-
             return { newProduct };
         } catch (error) {
             throw error;
-        };
-    };
+        }
+    }
 
-    // Create a new digital product along with its details and item
     async createDigitalProduct(productData, digitalData, itemData) {
         try {
-            // Prepare the data for the main product
             const product = {
                 name: productData.name,
                 description: productData.description,
                 base_price: productData.base_price,
                 product_type: 'digital'
             };
-
-            // Prepare the digital product details
-            const digital = {
-                platform:      digitalData.platform,
-                category:      digitalData.category,
-                region:        digitalData.region,
-                duration_months: digitalData.duration_months
-            };
-
-            // Prepare the digital product item details
+            const digital = { ...digitalData };
             const item = {
                 account_email:    itemData.account_email,
                 account_password: itemData.account_password,
@@ -73,11 +42,148 @@ class ProductService {
                 status:           itemData.status || 'available',
                 sale_price:       itemData.sale_price
             };
-
-            // Create the digital product along with its details and item in a transaction
             const newProduct = await productRepository.createDigitalProduct(product, digital, item);
-
             return { newProduct };
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // ───────────────────────── READ ─────────────────────────
+
+    async getAllProducts({ product_type, is_active, search, page, limit }) {
+        try {
+            const filters = {};
+            if (product_type) filters.product_type = product_type;
+            if (is_active !== undefined) filters.is_active = is_active === 'true' || is_active === true;
+            if (search) filters.search = search;
+
+            const pageNum  = Math.max(1, parseInt(page)  || 1);
+            const limitNum = Math.min(100, parseInt(limit) || 10);
+
+            return await productRepository.getAllProducts({ filters, page: pageNum, limit: limitNum });
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async getProductById(productId) {
+        try {
+            // Lấy base product trước để biết type
+            const base = await productRepository.findProductById(productId);
+            if (!base) {
+                const error = new Error('Sản phẩm không tồn tại');
+                error.statusCode = 404;
+                throw error;
+            }
+
+            if (base.product_type === 'physical') {
+                const result = await productRepository.getPhysicalProductById(productId);
+                if (!result) {
+                    const error = new Error('Không tìm thấy chi tiết sản phẩm vật lý');
+                    error.statusCode = 404;
+                    throw error;
+                }
+                return result;
+            } else {
+                const result = await productRepository.getDigitalProductById(productId);
+                if (!result) {
+                    const error = new Error('Không tìm thấy chi tiết sản phẩm kỹ thuật số');
+                    error.statusCode = 404;
+                    throw error;
+                }
+                return result;
+            }
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // ───────────────────────── UPDATE ─────────────────────────
+
+    async updatePhysicalProduct(productId, productData, physicalData) {
+        try {
+            const base = await productRepository.findProductById(productId);
+            if (!base) {
+                const error = new Error('Sản phẩm không tồn tại');
+                error.statusCode = 404;
+                throw error;
+            }
+            if (base.product_type !== 'physical') {
+                const error = new Error('Sản phẩm này không phải sản phẩm vật lý');
+                error.statusCode = 400;
+                throw error;
+            }
+            return await productRepository.updatePhysicalProduct(productId, productData, physicalData);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async updateDigitalProduct(productId, productData, digitalData) {
+        try {
+            const base = await productRepository.findProductById(productId);
+            if (!base) {
+                const error = new Error('Sản phẩm không tồn tại');
+                error.statusCode = 404;
+                throw error;
+            }
+            if (base.product_type !== 'digital') {
+                const error = new Error('Sản phẩm này không phải sản phẩm kỹ thuật số');
+                error.statusCode = 400;
+                throw error;
+            }
+            return await productRepository.updateDigitalProduct(productId, productData, digitalData);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async updatePhysicalItem(itemId, itemData) {
+        try {
+            return await productRepository.updatePhysicalItem(itemId, itemData);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async updateDigitalItem(itemId, itemData) {
+        try {
+            return await productRepository.updateDigitalItem(itemId, itemData);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // ───────────────────────── DELETE ─────────────────────────
+
+    async softDeleteProduct(productId) {
+        try {
+            const base = await productRepository.findProductById(productId);
+            if (!base) {
+                const error = new Error('Sản phẩm không tồn tại');
+                error.statusCode = 404;
+                throw error;
+            }
+            return await productRepository.softDeleteProduct(productId);
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    async hardDeleteProduct(productId) {
+        try {
+            const base = await productRepository.findProductById(productId);
+            if (!base) {
+                const error = new Error('Sản phẩm không tồn tại');
+                error.statusCode = 404;
+                throw error;
+            }
+            if (base.product_type === 'physical') {
+                return await productRepository.hardDeletePhysicalProduct(productId);
+            } else {
+                return await productRepository.hardDeleteDigitalProduct(productId);
+            }
         } catch (error) {
             throw error;
         }
