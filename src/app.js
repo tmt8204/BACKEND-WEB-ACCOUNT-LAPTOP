@@ -5,6 +5,9 @@ const connectDB = require("./configs/mongodb.config");
 const authRoutes = require("./routes/auth.route");
 const userRoutes = require("./routes/user.route");
 const productRoutes = require("./routes/product.route");
+const cartRoutes = require("../src/routes/cart.route");
+const orderRoutes = require("../src/routes/order.route");
+const paymentRoutes = require("../src/routes/payment.route");
 const { errorHandler } = require("./middlewares/error.handler");
 
 const app = express();
@@ -25,6 +28,13 @@ app.use("/api/v1/user", userRoutes);
 
 // Product routes
 app.use("/api/v1/product", productRoutes);
+
+// Cart routes
+app.use("/api/v1/cart", cartRoutes);
+
+app.use("/api/v1/order", orderRoutes);
+
+app.use("/api/v1/payment", paymentRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

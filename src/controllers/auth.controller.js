@@ -16,7 +16,7 @@ class AuthController {
 
       // Send success response
       return res.status(201).json(
-        ApiResponse.success(201, 'Đăng ký tài khoản thành công', { user: result.userResponse, accessToken: result.accessToken, refreshToken: result.refreshToken })
+        ApiResponse.success(201, 'Đăng ký tài khoản thành công', { user: result.userResponse })
       );
     } catch (error) {
       next(error);
