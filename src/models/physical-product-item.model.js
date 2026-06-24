@@ -5,7 +5,6 @@ const physicalProductItemSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'PhysicalProduct',
         required: true,
-        unique: true
     },
     serial_number: {
         type: String,

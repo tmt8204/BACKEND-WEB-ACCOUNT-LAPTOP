@@ -8,6 +8,7 @@ const productRoutes = require("./routes/product.route");
 const cartRoutes = require("../src/routes/cart.route");
 const orderRoutes = require("../src/routes/order.route");
 const paymentRoutes = require("../src/routes/payment.route");
+const inventoryRoutes = require("../src/routes/inventory.route");
 const { errorHandler } = require("./middlewares/error.handler");
 const supportRoutes = require("../src/routes/support.route");
 
@@ -38,6 +39,8 @@ app.use("/api/v1/order", orderRoutes);
 app.use("/api/v1/payment", paymentRoutes);
 
 app.use("/api/v1/support", supportRoutes);
+
+app.use("/api/v1/inventory", inventoryRoutes)
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

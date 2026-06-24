@@ -25,7 +25,6 @@ class CartRepository {
 
     async addItemToCart(userId, item) {
         try {
-            // BUG FIX: thiếu return ở đây
             const cart = await Cart.findOneAndUpdate(
                 { user_id: userId },
                 { $push: { items: item } },
@@ -34,7 +33,7 @@ class CartRepository {
                 path: 'items.product_id',
                 select: 'name base_price product_type status is_active'
             });
-            return cart; // <-- đã thêm return
+            return cart; 
         } catch (error) {
             throw error;
         }
