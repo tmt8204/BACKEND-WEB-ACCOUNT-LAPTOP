@@ -71,14 +71,14 @@ router.put(
 /** Soft-delete: ẩn sản phẩm */
 router.patch(
     "/:id/deactivate",
-    authenticate, authorizeRoles(['admin']),
+    authenticate, authorizeRoles(['admin', 'staff']),
     (req, res, next) => productController.softDeleteProduct(req, res, next)
 );
 
 /** Hard-delete: xoá hẳn */
 router.delete(
     "/:id",
-    authenticate, authorizeRoles(['admin']),
+    authenticate, authorizeRoles(['admin', 'staff']),
     (req, res, next) => productController.hardDeleteProduct(req, res, next)
 );
 
