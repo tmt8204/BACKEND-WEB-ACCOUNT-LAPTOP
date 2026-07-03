@@ -12,6 +12,8 @@ const inventoryRoutes = require("../src/routes/inventory.route");
 const { errorHandler } = require("./middlewares/error.handler");
 const supportRoutes = require("../src/routes/support.route");
 const adminRoutes = require("../src/routes/admin.route");
+const staffRoutes = require("../src/routes/staff.route");
+
 
 const app = express();
 
@@ -44,8 +46,9 @@ app.use("/api/v1/support", supportRoutes);
 app.use("/api/v1/inventory", inventoryRoutes)
 
 app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/staff", staffRoutes);
 
-// Error handling middleware (must be last)
+// Error handling middleware (must be last) 
 app.use(errorHandler);
 
 module.exports = app;
