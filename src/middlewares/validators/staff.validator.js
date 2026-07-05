@@ -4,18 +4,18 @@ const Joi = require('joi');
 const updateOrderStatusSchema = Joi.object({
     status: Joi.string()
         .valid(
-            'Pending',
-            'Confirmed',
-            'Preparing',
-            'Shipping',
-            'Delivered',
-            'Cancelled'
+            'pending',
+            'confirmed',
+            'preparing',
+            'processing',
+            'delivered',
+            'cancelled'
         )
         .required()
         .messages({
             'any.required': 'Trạng thái đơn hàng là bắt buộc.',
             'any.only':
-                'Trạng thái phải là Pending, Confirmed, Preparing, Shipping, Delivered hoặc Cancelled.'
+                'Trạng thái phải là pending, confirmed, preparing, processing, delivered hoặc cancelled.'
         })
 });
 
@@ -34,12 +34,12 @@ const getOrdersSchema = Joi.object({
 
     status: Joi.string()
         .valid(
-            'Pending',
-            'Confirmed',
-            'Preparing',
-            'Shipping',
-            'Delivered',
-            'Cancelled'
+            'pending',
+            'confirmed',
+            'preparing',
+            'processing',
+            'delivered',
+            'cancelled'
         )
         .optional()
 });

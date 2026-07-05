@@ -5,14 +5,14 @@ const connectDB = require("./configs/mongodb.config");
 const authRoutes = require("./routes/auth.route");
 const userRoutes = require("./routes/user.route");
 const productRoutes = require("./routes/product.route");
-const cartRoutes = require("../src/routes/cart.route");
-const orderRoutes = require("../src/routes/order.route");
-const paymentRoutes = require("../src/routes/payment.route");
-const inventoryRoutes = require("../src/routes/inventory.route");
+const cartRoutes = require("./routes/cart.route");
+const orderRoutes = require("./routes/order.route");
+const paymentRoutes = require("./routes/payment.route");
+const inventoryRoutes = require("./routes/inventory.route");
 const { errorHandler } = require("./middlewares/error.handler");
-const supportRoutes = require("../src/routes/support.route");
-const adminRoutes = require("../src/routes/admin.route");
-const staffRoutes = require("../src/routes/staff.route");
+const supportRoutes = require("./routes/support.route");
+const adminRoutes = require("./routes/admin.route");
+const staffRoutes = require("./routes/staff.route");
 
 
 const app = express();
@@ -47,6 +47,7 @@ app.use("/api/v1/inventory", inventoryRoutes)
 
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/staff", staffRoutes);
+
 
 // Error handling middleware (must be last) 
 app.use(errorHandler);

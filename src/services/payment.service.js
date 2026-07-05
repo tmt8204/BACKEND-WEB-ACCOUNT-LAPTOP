@@ -204,7 +204,7 @@ class PaymentService {
                 err.statusCode = 400;
                 throw err;
             }
-            if (!['pending', 'processing'].includes(order.status)) {
+            if (!['pending', 'Processing'].includes(order.status)) {
                 const err = new Error('Đơn hàng không ở trạng thái hợp lệ để xác nhận COD');
                 err.statusCode = 400;
                 throw err;

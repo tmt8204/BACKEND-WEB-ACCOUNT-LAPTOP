@@ -9,22 +9,26 @@ class StaffService {
             totalOrders,
             pendingOrders,
             confirmedOrders,
-            shippingOrders,
-            deliveredOrders
+            ProcessingOrders,
+            deliveredOrders,
+            cancelledOrders,
         ] = await Promise.all([
             Order.countDocuments(),
             Order.countDocuments({ status: 'Pending' }),
             Order.countDocuments({ status: 'Confirmed' }),
-            Order.countDocuments({ status: 'Shipping' }),
-            Order.countDocuments({ status: 'Delivered' })
+            Order.countDocuments({ status: 'Processing' }),
+            Order.countDocuments({ status: 'Delivered' }),
+            Order.countDocuments({ status: 'Cancelled' }),
         ]);
 
         return {
             total_orders: totalOrders,
             pending_orders: pendingOrders,
             confirmed_orders: confirmedOrders,
-            shipping_orders: shippingOrders,
-            delivered_orders: deliveredOrders
+            Processing_orders: ProcessingOrders,
+            delivered_orders: deliveredOrders,
+            cancelled_orders: cancelledOrders,
+            
         };
     }
 
@@ -78,7 +82,7 @@ class StaffService {
         const order = await Order.findById(orderId);
 
         if (!order) {
-            throw new Error('Đơn hàng không tìm thấy!');
+            throw new Error( 'Đơn hàng không tìm thấy!');
         }
 
         order.status = status;
