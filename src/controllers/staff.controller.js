@@ -46,6 +46,7 @@ class StaffController {
     // Cập nhật trạng thái đơn hàng
     async updateOrderStatus(req, res, next) {
         try {
+        
             const { orderId } = req.params;
             const { status } = req.body;
             const result = await staffService.updateOrderStatus(orderId, status);

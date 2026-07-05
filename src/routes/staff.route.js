@@ -36,7 +36,7 @@ router.get(
 
 
 // Cập nhật trạng thái đơn hàng
-router.put(
+router.patch(
     '/orders/:orderId/status',
     authenticate,
     authorizeRoles(['staff', 'admin']),

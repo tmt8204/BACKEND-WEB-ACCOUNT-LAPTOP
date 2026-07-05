@@ -6,28 +6,31 @@ class StaffService {
     async getDashboard() {
 
         const [
-            totalOrders,
-            pendingOrders,
-            confirmedOrders,
-            ProcessingOrders,
-            deliveredOrders,
-            cancelledOrders,
+                totalOrders,
+                pendingOrders,
+                confirmedOrders,
+                processingOrders,
+                completedOrders,
+                cancelledOrders,
+                failedOrders
         ] = await Promise.all([
             Order.countDocuments(),
             Order.countDocuments({ status: 'Pending' }),
             Order.countDocuments({ status: 'Confirmed' }),
             Order.countDocuments({ status: 'Processing' }),
-            Order.countDocuments({ status: 'Delivered' }),
+            Order.countDocuments({ status: 'Completed' }),
             Order.countDocuments({ status: 'Cancelled' }),
+            Order.countDocuments({ status: 'Failed' })
         ]);
 
         return {
             total_orders: totalOrders,
             pending_orders: pendingOrders,
             confirmed_orders: confirmedOrders,
-            Processing_orders: ProcessingOrders,
-            delivered_orders: deliveredOrders,
+            processing_orders: processingOrders,
+            completed_orders: completedOrders,
             cancelled_orders: cancelledOrders,
+            failed_orders: failedOrders
             
         };
     }
