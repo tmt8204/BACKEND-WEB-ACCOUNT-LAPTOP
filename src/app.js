@@ -13,6 +13,7 @@ const { errorHandler } = require("./middlewares/error.handler");
 const supportRoutes = require("./routes/support.route");
 const adminRoutes = require("./routes/admin.route");
 const staffRoutes = require("./routes/staff.route");
+const uploadRoutes = require("./routes/upload.route");
 
 
 const app = express();
@@ -46,8 +47,10 @@ app.use("/api/v1/support", supportRoutes);
 app.use("/api/v1/inventory", inventoryRoutes)
 
 app.use("/api/v1/admin", adminRoutes);
+
 app.use("/api/v1/staff", staffRoutes);
 
+app.use("/api/v1/upload", uploadRoutes);
 
 // Error handling middleware (must be last) 
 app.use(errorHandler);
