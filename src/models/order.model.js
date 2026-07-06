@@ -4,7 +4,7 @@ const orderItemSchema = new mongoose.Schema({
     item_id: {
         type: mongoose.Schema.Types.ObjectId,
         required: true,
-        refPath: 'items.item_type_ref'
+        refPath: 'item_type_ref'
     },
     // Dùng refPath để populate đúng model
     item_type_ref: {
@@ -53,7 +53,7 @@ const orderSchema = new mongoose.Schema({
         min: 0
     },
     // null nếu toàn bộ item là digital
-    shipping_address: {
+    Processing_address: {
         type: String,
         default: null
     },

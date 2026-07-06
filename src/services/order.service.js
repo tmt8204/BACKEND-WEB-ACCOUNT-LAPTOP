@@ -78,7 +78,8 @@ class OrderService {
                         sale_price: itemDoc.sale_price   // luôn lấy giá thực tế từ item, không từ cart
                     });
 
-                    total_amount += itemDoc.sale_price;
+                    //total_amount += itemDoc.sale_price;
+                    total_amount += itemDoc.sale_price * cartItem.quantity;
 
                     // Lock item → reserved
                     await PhysicalProductItem.findByIdAndUpdate(
@@ -121,7 +122,7 @@ class OrderService {
                         sale_price: itemDoc.sale_price
                     });
 
-                    total_amount += itemDoc.sale_price;
+                    total_amount += itemDoc.sale_price * cartItem.quantity;
 
                     // Lock item → reserved
                     await DigitalProductItem.findByIdAndUpdate(

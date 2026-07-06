@@ -3,6 +3,7 @@ const paymentRepository = require('../repositories/payment.repository');
 const orderRepository = require('../repositories/order.repository');
 const PhysicalProductItem = require('../models/physical-product-item.model');
 const DigitalProductItem = require('../models/digital-product-item.model');
+const inventoryRepository = require('../repositories/inventory.repository');
 
 // Thời gian hết hạn thanh toán chuyển khoản: 30 phút
 const BANK_TRANSFER_EXPIRE_MINUTES = 30;
@@ -203,7 +204,7 @@ class PaymentService {
                 err.statusCode = 400;
                 throw err;
             }
-            if (!['pending', 'processing'].includes(order.status)) {
+            if (!['pending', 'Processing'].includes(order.status)) {
                 const err = new Error('Đơn hàng không ở trạng thái hợp lệ để xác nhận COD');
                 err.statusCode = 400;
                 throw err;
@@ -362,7 +363,7 @@ class PaymentService {
         }
     }
 
-    async _markItemsSold(items, session = null) {
+    async _markItemsSold(items, session = null, orderId = null) {
         const options = session ? { session } : {};
         for (const item of items) {
             if (item.item_type_ref === 'PhysicalProductItem') {
@@ -378,6 +379,22 @@ class PaymentService {
                     options
                 );
             }
+
+            // Ghi log xuất kho
+            await inventoryRepository.createLog(
+                {
+                    product_id:    item.product_id,
+                    item_id:       item.item_id,
+                    item_type_ref: item.item_type_ref,
+                    product_type:  item.product_type,
+                    action:        'stock_out',
+                    status_before: 'reserved',
+                    status_after:  'sold',
+                    note: orderId ? `Xuất kho theo đơn hàng ${orderId}` : 'Xuất kho',
+                    created_by:    item.item_id // placeholder — xem ghi chú bên dưới
+                },
+                session
+            );
         }
     }
 
