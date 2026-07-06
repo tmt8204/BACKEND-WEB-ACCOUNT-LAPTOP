@@ -9,7 +9,7 @@ const createOrderSchema = Joi.object({
             'any.required': 'Phương thức thanh toán là bắt buộc'
         }),
 
-    Processing_address: Joi.string()
+    shipping_address: Joi.string()
         .max(300)
         .optional()
         .allow('', null),

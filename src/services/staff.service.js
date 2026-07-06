@@ -15,12 +15,12 @@ class StaffService {
                 failedOrders
         ] = await Promise.all([
             Order.countDocuments(),
-            Order.countDocuments({ status: 'Pending' }),
-            Order.countDocuments({ status: 'Confirmed' }),
-            Order.countDocuments({ status: 'Processing' }),
-            Order.countDocuments({ status: 'Completed' }),
-            Order.countDocuments({ status: 'Cancelled' }),
-            Order.countDocuments({ status: 'Failed' })
+            Order.countDocuments({ status: 'pending' }),
+            Order.countDocuments({ status: 'confirmed' }),
+            Order.countDocuments({ status: 'processing' }),
+            Order.countDocuments({ status: 'completed' }),
+            Order.countDocuments({ status: 'cancelled' }),
+            Order.countDocuments({ status: 'failed' })
         ]);
 
         return {

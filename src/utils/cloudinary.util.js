@@ -11,7 +11,7 @@ class CloudinaryUtil {
         return new Promise((resolve, reject) => {
             const uploadStream = cloudinary.uploader.upload_stream(
                 {
-                    folder: `laptop-shop/${folder}`,
+                    folder: `web-account-laptop/${folder}`,
                     resource_type: 'image',
                     transformation: [{ quality: 'auto', fetch_format: 'auto' }]
                 },
@@ -45,7 +45,11 @@ class CloudinaryUtil {
     /** Xoá nhiều ảnh */
     async deleteMultipleImages(publicIds = []) {
         if (!publicIds.length) return;
-        return await cloudinary.uploader.delete_resources(publicIds);
+        try {
+            return await cloudinary.api.delete_resources(publicIds);
+        } catch (error) {
+            throw error;
+        }
     }
 
     /** Lấy public_id từ URL Cloudinary (dùng khi model chỉ lưu URL) */

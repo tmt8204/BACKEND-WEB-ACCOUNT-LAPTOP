@@ -1,5 +1,10 @@
 const mongoose = require('mongoose');
 
+const imageSchema = new mongoose.Schema({
+    url: { type: String, required: true },
+    public_id: { type: String, required: true }
+}, { _id: false });
+
 const physicalProductItemSchema = new mongoose.Schema({
     physical_product_id: {
         type: mongoose.Schema.Types.ObjectId,
@@ -12,7 +17,7 @@ const physicalProductItemSchema = new mongoose.Schema({
         unique: true
     },
     images_urls: {
-        type: [String],
+        type: [imageSchema ],
         default: []
     },
     status: {
