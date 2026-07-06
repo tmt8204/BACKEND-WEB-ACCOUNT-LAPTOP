@@ -1,6 +1,12 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
+    googleId: {          
+        type: String,
+        default: null,
+        unique: true,
+        sparse: true
+    },
     fullname: {
         type: String,
         required: true
@@ -13,12 +19,12 @@ const userSchema = new mongoose.Schema({
     },
     password: {
         type: String,
-        required: true,
-        select: false
+        required: function () { return !this.googleId; }, // Google login không cần password
+        select: false,
+        default: null
     },
     phone: {
         type: String,
-        required: true,
         unique: true
     },
     address: {

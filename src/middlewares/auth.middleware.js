@@ -50,9 +50,6 @@ const authenticate = (req, res, next) => {
 
 const authorizeRoles = (allowedRoles) => async (req, res, next) => {
   try {
-    //console.log('User role from token:', req.user.role);
-    console.log('User role:', req.user.role);
-    console.log('Allowed roles:', allowedRoles);
 
     if (!allowedRoles.includes(req.user.role)) {
         return res.status(403).json(

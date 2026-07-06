@@ -72,6 +72,15 @@ class UserRepository {
       throw error;
     }
   }
+
+  async findUserByGoogleId(googleId) {
+    try {
+      const user = await User.findOne({ googleId: googleId });
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 module.exports = new UserRepository();

@@ -4,6 +4,8 @@ const jwtUtil = require('../utils/jwt.util');
 const otpUtil = require('../utils/otp.util');
 const mailUtil = require('../utils/mail.util');
 const passwordUtil = require('../utils/password.util');
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 class AuthService {
 
@@ -136,6 +138,100 @@ class AuthService {
 
       // Return user data without password
       const userResponse = user.toObject();
+      delete userResponse.password;
+      delete userResponse.refreshToken;
+
+      return { userResponse, accessToken, refreshToken };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async loginWithGoogle(idToken) {
+    try {
+      // 1. Verify the Google ID token and get user info
+      let payload;
+      try {
+        const ticket = await googleClient.verifyIdToken({
+          idToken,
+          audience: process.env.GOOGLE_CLIENT_ID
+        });
+        payload = ticket.getPayload();
+      } catch (verifyError) {
+        const error = new Error('idToken không hợp lệ hoặc đã hết hạn');
+        error.statusCode = 401;
+        error.errorType = 'Unauthorized';
+        throw error;
+      }
+
+      const { sub: googleId, email, name, picture, email_verified } = payload;
+
+      if (!email_verified) {
+        const error = new Error('Email chưa được xác thực bởi Google');
+        error.statusCode = 403;
+        error.errorType = 'Forbidden';
+        throw error;
+      }
+
+      // 2. Check if user already exists by Google ID
+      let user = await userRepository.findUserByGoogleId(googleId);
+
+      if (!user) {
+        // 3. If user does not exist, check if email is already registered
+        const existingEmailUser = await userRepository.findUserByEmail(email);
+
+        if (existingEmailUser) {
+          // Link googleId to existing account
+          user = await userRepository.updateUserProfile(existingEmailUser._id, {
+            googleId,
+            isVerified: true,
+            avatar: existingEmailUser.avatar || picture
+          });
+        } else {
+          // 4. If user does not exist and email is not registered -> create new account
+          const customerRole = await roleRepository.findRoleByName('customer');
+          if (!customerRole) {
+            const error = new Error('Role customer không tồn tại. Vui lòng khởi tạo dữ liệu');
+            error.statusCode = 500;
+            error.errorType = 'Internal Server Error';
+            throw error;
+          }
+
+          user = await userRepository.createUser({
+            fullname: name,
+            email: email.toLowerCase(),
+            googleId,
+            avatar: picture,
+            role: customerRole._id,
+            isVerified: true,
+            isActive: true
+          });
+        }
+      }
+
+      // 5. Check if user is active
+      if (!user.isActive) {
+        const error = new Error('Tài khoản của bạn đã bị khóa');
+        error.statusCode = 403;
+        error.errorType = 'Forbidden';
+        throw error;
+      }
+
+      // 6. Generate JWT token
+      const userWithRole = await userRepository.findUserById(user._id);
+
+      const jwtPayload = {
+        id: userWithRole._id,
+        email: userWithRole.email,
+        role: userWithRole.role.name
+      };
+
+      const accessToken = jwtUtil.generateAccessToken(jwtPayload);
+      const refreshToken = jwtUtil.generateRefreshToken(jwtPayload);
+
+      await userRepository.updateRefreshToken(userWithRole._id, refreshToken);
+
+      const userResponse = userWithRole.toObject();
       delete userResponse.password;
       delete userResponse.refreshToken;
 

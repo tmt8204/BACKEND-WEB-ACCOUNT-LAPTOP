@@ -39,6 +39,24 @@ class AuthController {
     }
   }
 
+  async googleLogin(req, res, next) {
+    try {
+      const { idToken } = req.body;
+
+      const result = await authService.loginWithGoogle(idToken);
+
+      return res.status(200).json(
+        ApiResponse.success(200, 'Đăng nhập bằng Google thành công', {
+          user: result.userResponse,
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken
+        })
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async forgotPassword(req, res, next) {
     try {
       const { email } = req.body;

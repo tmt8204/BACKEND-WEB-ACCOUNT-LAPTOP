@@ -17,6 +17,19 @@ class OrderService {
      * Payment sẽ được tạo riêng ở PaymentService sau khi order có _id.
      */
     async createOrder(userId, { payment_method, shipping_address, note }) {
+        // ── 0. Kiểm tra phone của user ──────────────────────────────
+        const user = await mongoose.model('User').findById(userId);
+        if (!user) {
+            const err = new Error('Người dùng không tồn tại');
+            err.statusCode = 404;
+            throw err;
+        }
+        if (!user.phone) {
+            const err = new Error('Vui lòng cập nhật số điện thoại trước khi đặt hàng');
+            err.statusCode = 400;
+            throw err;
+        }
+
         const session = await mongoose.startSession();
         session.startTransaction();
         try {
