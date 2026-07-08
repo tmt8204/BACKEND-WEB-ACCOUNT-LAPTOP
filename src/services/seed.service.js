@@ -19,7 +19,6 @@ class SeedService {
             name: roleName,
             description: descriptions[roleName]
           });
-          console.log(`✓ Role '${roleName}' created successfully`);
         }
       }
     } catch (error) {
@@ -54,9 +53,6 @@ class SeedService {
         };
 
         await userRepository.createUser(adminUser);
-        console.log('✓ Admin account created successfully');
-        console.log(`  Email: ${process.env.ADMIN_EMAIL}`);
-        console.log(`  Password: ${process.env.ADMIN_PASSWORD}`);
       }
     } catch (error) {
       console.error('Error initializing admin account:', error.message);
@@ -66,10 +62,8 @@ class SeedService {
 
   async seed() {
     try {
-      console.log('\n=== Starting Database Seeding ===');
       await this.initializeRoles();
       await this.initializeAdminAccount();
-      console.log('=== Seeding Completed ===\n');
     } catch (error) {
       console.error('Seeding failed:', error.message);
       throw error;

@@ -4,6 +4,7 @@ const orderRepository = require('../repositories/order.repository');
 const userRepository = require('../repositories/user.repository');
 const roleRepository = require('../repositories/role.repository');
 const PhysicalProduct = require('../models/physical-product.model');
+const refundService = require('./refund.service');
 
 const REOPEN_WINDOW_DAYS = 7;   // số ngày customer được reopen sau khi resolved
 const AUTO_CLOSE_DAYS = 7;      // số ngày tự động close sau khi resolved
@@ -335,6 +336,77 @@ class SupportService {
 
     async getStats() {
         return await supportTicketRepo.getStats();
+    }
+
+    async processRefundForTicket(ticketId, staffId, data = {}) {
+        const { reason, refund_method, restock_physical } = data;
+
+        const ticket = await this._getTicketOrThrow(ticketId);
+
+        // Chỉ áp dụng cho ticket loại refund_request
+        if (ticket.type !== 'refund_request') {
+            const err = new Error('Chỉ có thể hoàn tiền cho yêu cầu loại refund_request');
+            err.statusCode = 400;
+            throw err;
+        }
+
+        // Ticket phải đang ở trạng thái xử lý được (chưa resolved/closed/cancelled)
+        const validStatuses = ['open', 'in_progress', 'waiting_customer', 'reopened'];
+        if (!validStatuses.includes(ticket.status)) {
+            const err = new Error(
+                `Không thể hoàn tiền khi ticket đang ở trạng thái "${ticket.status}"`
+            );
+            err.statusCode = 400;
+            throw err;
+        }
+
+        // order_id đã được populate (chỉ có total_amount, status, createdAt) → lấy _id
+        const orderId = ticket.order_id._id || ticket.order_id;
+
+        // Gọi refund service — dùng đúng order_item_id đã gắn với ticket
+        const result = await refundService.processRefund(orderId, staffId, {
+            order_item_ids: [ticket.order_item_id.toString()],
+            reason: reason || `Hoàn tiền theo yêu cầu hỗ trợ ${ticket.ticket_code}`,
+            refund_method,
+            restock_physical,
+            ticket_id: ticket._id
+        });
+
+        return result;
+        // Lưu ý: refund.service.js đã tự động resolve ticket này
+        // (set status='resolved', resolution_note, resolved_at) — không cần làm lại ở đây
+    }
+
+    async rejectTicket(ticketId, staffId, { rejection_reason }) {
+        const ticket = await this._getTicketOrThrow(ticketId);
+
+        const validStatuses = ['open', 'in_progress', 'waiting_customer', 'reopened'];
+        if (!validStatuses.includes(ticket.status)) {
+            const err = new Error(
+                `Không thể từ chối yêu cầu khi ticket đang ở trạng thái "${ticket.status}"`
+            );
+            err.statusCode = 400;
+            throw err;
+        }
+
+        const updated = await supportTicketRepo.updateTicket(ticketId, {
+            status: 'rejected',
+            rejection_reason,
+            rejected_at: new Date(),
+            rejected_by: staffId
+        });
+
+        // Ghi lại thành 1 message hệ thống để khách thấy trong lịch sử hội thoại
+        await ticketMessageRepo.createMessage({
+            ticket_id: ticketId,
+            sender_id: staffId,
+            sender_role: 'staff',
+            content: `Yêu cầu đã bị từ chối. Lý do: ${rejection_reason}`,
+            attachments: [],
+            is_internal: false
+        });
+
+        return updated;
     }
 
     // ══════════════════════════════════════════════════════════

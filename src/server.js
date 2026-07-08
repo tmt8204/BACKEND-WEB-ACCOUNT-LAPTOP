@@ -3,7 +3,7 @@ require("dotenv").config();
 const app = require("./app");
 const seedService = require("./services/seed.service");
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT;
 
 // Start server and seed database
 const startServer = async () => {

@@ -17,7 +17,7 @@ const stockInPhysicalSchema = Joi.object({
         'number.min':   'Giá bán không được âm',
         'any.required': 'Giá bán là bắt buộc'
     }),
-    status: Joi.string().valid('available', 'reserved', 'sold').optional(),
+    status: Joi.string().valid('available', 'reserved', 'sold', 'returned').optional(),
     note: Joi.string().max(300).optional().allow('', null)
 });
 

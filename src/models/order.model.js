@@ -75,7 +75,9 @@ const orderSchema = new mongoose.Schema({
             'processing',   // đang chuẩn bị / giao hàng
             'completed',    // hoàn tất
             'cancelled',    // huỷ
-            'failed'        // thanh toán thất bại / hết hạn
+            'failed',        // thanh toán thất bại / hết hạn
+            'partially_refunded', // đã hoàn tiền 1 phần
+            'refunded',      // đã hoàn tiền
         ],
         default: 'pending'
     },

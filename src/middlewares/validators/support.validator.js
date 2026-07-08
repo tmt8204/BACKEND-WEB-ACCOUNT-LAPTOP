@@ -96,6 +96,25 @@ const resolveTicketSchema = Joi.object({
     })
 });
 
+const refundTicketSchema = Joi.object({
+    reason: Joi.string().min(10).max(500).optional().messages({
+        'string.min': 'Lý do hoàn tiền phải có ít nhất 10 ký tự'
+    }),
+    refund_method: Joi.string()
+        .valid('original_payment', 'bank_transfer', 'store_credit')
+        .optional(),
+    restock_physical: Joi.boolean().optional().default(false)
+});
+
+const rejectTicketSchema = Joi.object({
+    rejection_reason: Joi.string().min(10).max(500).required().messages({
+        'string.empty': 'Lý do từ chối không được để trống',
+        'string.min': 'Lý do từ chối phải có ít nhất 10 ký tự',
+        'any.required': 'Lý do từ chối là bắt buộc'
+    })
+});
+
+
 module.exports = {
     createTicketSchema,
     sendMessageSchema,
@@ -103,5 +122,7 @@ module.exports = {
     sendStaffMessageSchema,
     assignTicketSchema,
     updatePrioritySchema,
-    resolveTicketSchema
+    resolveTicketSchema,
+    refundTicketSchema,
+    rejectTicketSchema
 };

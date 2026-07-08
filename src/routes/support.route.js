@@ -13,7 +13,9 @@ const {
     sendStaffMessageSchema,
     assignTicketSchema,
     updatePrioritySchema,
-    resolveTicketSchema
+    resolveTicketSchema,
+    refundTicketSchema,
+    rejectTicketSchema
 } = require('../middlewares/validators/support.validator');
 
 
@@ -136,6 +138,23 @@ router.get(
     authenticate,
     authorizeRoles(['admin', 'staff']),
     supportController.getStats
+);
+
+// Hoàn tiền theo ticket (chỉ áp dụng type=refund_request)
+router.put(
+    '/manage/tickets/:ticketId/refund',
+    authenticate,
+    authorizeRoles(['admin', 'staff']),
+    validate(refundTicketSchema),
+    supportController.refundTicket
+);
+
+router.put(
+    '/manage/tickets/:ticketId/reject',
+    authenticate,
+    authorizeRoles(['admin', 'staff']),
+    validate(rejectTicketSchema),
+    supportController.rejectTicket
 );
 
 module.exports = router;

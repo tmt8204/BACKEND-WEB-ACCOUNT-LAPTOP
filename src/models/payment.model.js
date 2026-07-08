@@ -77,6 +77,19 @@ const paymentSchema = new mongoose.Schema({
     note: {
         type: String,
         default: null
+    },
+    refunded_amount: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
+    refunded_at: {
+        type: Date,
+        default: null
+    },
+    refund_reason: {
+        type: String,
+        default: null
     }
 }, {
     timestamps: true

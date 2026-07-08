@@ -200,6 +200,33 @@ class SupportController {
             next(error);
         }
     }
+
+    // PUT /api/v1/support/manage/tickets/:ticketId/refund
+    async refundTicket(req, res, next) {
+        try {
+            const staffId = req.user.id;
+            const { ticketId } = req.params;
+            const result = await supportService.processRefundForTicket(ticketId, staffId, req.body);
+            return res.status(200).json(
+                ApiResponse.success(200, 'Hoàn tiền theo yêu cầu hỗ trợ thành công', result)
+            );
+        } catch (error) {
+            next(error);
+        }
+    }
+
+    async rejectTicket(req, res, next) {
+        try {
+            const staffId = req.user.id;
+            const { ticketId } = req.params;
+            const result = await supportService.rejectTicket(ticketId, staffId, req.body);
+            return res.status(200).json(
+                ApiResponse.success(200, 'Từ chối yêu cầu hỗ trợ thành công', result)
+            );
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new SupportController();

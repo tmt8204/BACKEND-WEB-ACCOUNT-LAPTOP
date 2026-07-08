@@ -30,7 +30,7 @@ const createPhysicalProductSchema = Joi.object({
     itemData: Joi.object({
         serial_number: Joi.string().required(),
         images_urls:   Joi.array().items(imageSchema).optional(),
-        status:        Joi.string().valid('available', 'reserved', 'sold').optional(),
+        status:        Joi.string().valid('available', 'reserved', 'sold', 'returned').optional(),
         sale_price:    Joi.number().min(0).required()
     }).required()
 });
@@ -107,7 +107,7 @@ const updateDigitalItemSchema = Joi.object({
     account_email:    Joi.string().email().optional(),
     account_password: Joi.string().min(1).optional(),
     expired_at:       Joi.date().iso().optional().allow(null),
-    status:           Joi.string().valid('available', 'sold', 'expired').optional(),
+    status:           Joi.string().valid('available', 'sold', 'expired', 'returned').optional(),
     sale_price:       Joi.number().min(0).optional()
 }).min(1);
 

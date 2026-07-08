@@ -23,7 +23,7 @@ const physicalProductItemSchema = new mongoose.Schema({
     status: {
         type: String,
         required: true,
-        enum: ['available', 'reserved', 'sold'],
+        enum: ['available', 'reserved', 'sold', 'returned'],
         default: 'available'
     },
     sale_price: {

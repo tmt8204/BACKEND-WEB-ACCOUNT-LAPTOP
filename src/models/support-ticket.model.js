@@ -53,7 +53,7 @@ const supportTicketSchema = new mongoose.Schema({
     // ── Trạng thái ────────────────────────────────────────────
     status: {
         type: String,
-        enum: ['open', 'in_progress', 'waiting_customer', 'resolved', 'closed', 'cancelled', 'reopened'],
+        enum: ['open', 'in_progress', 'waiting_customer', 'resolved', 'closed', 'cancelled', 'reopened', 'rejected'],
         default: 'open'
     },
     assigned_to: {
@@ -74,7 +74,17 @@ const supportTicketSchema = new mongoose.Schema({
 
     // ── Đánh giá sau khi closed ───────────────────────────────
     rating: { type: Number, min: 1, max: 5, default: null },
-    rating_comment: { type: String, default: null }
+    rating_comment: { type: String, default: null },
+
+    // ── Hoàn tiền (chỉ dùng khi type = 'refund_request') ─────────
+    rejection_reason: { type: String, default: null },
+    rejected_at: { type: Date, default: null },
+    rejected_by: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+    },
+    refund_processed: { type: Boolean, default: false },
 }, { timestamps: true });
 
 // Index

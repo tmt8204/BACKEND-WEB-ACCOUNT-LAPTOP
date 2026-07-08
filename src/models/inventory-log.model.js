@@ -27,7 +27,8 @@ const inventoryLogSchema = new mongoose.Schema({
         // stock_in  : nhập kho (thêm item mới)
         // stock_out : xuất kho (item bị bán / xoá)
         // adjustment: chỉnh trạng thái thủ công
-        enum: ['stock_in', 'stock_out', 'adjustment']
+        // refund_in: hoàn tiền (item bị trả lại)
+        enum: ['stock_in', 'stock_out', 'adjustment', 'refund_in'],
     },
     // Trạng thái item trước và sau khi thay đổi
     status_before: {
