@@ -1,4 +1,5 @@
 const Order = require('../models/order.model');
+const notificationService = require('./notification.service');
 
 class StaffService {
 
@@ -85,12 +86,34 @@ class StaffService {
         const order = await Order.findById(orderId);
 
         if (!order) {
-            throw new Error( 'Đơn hàng không tìm thấy!');
+            throw new Error('Đơn hàng không tìm thấy!');
         }
 
-        order.status = status;
+        // Lưu lại trạng thái CŨ trước khi ghi đè
+        const oldStatus = order.status;
 
+        order.status = status;
         await order.save();
+
+        // Gửi thông báo
+        if (oldStatus !== status) {
+            const statusLabels = {
+                pending: 'Chờ xử lý',
+                confirmed: 'Đã xác nhận',  
+                processing: 'Đang xử lý',
+                completed: 'Hoàn thành',
+                cancelled: 'Đã huỷ',
+                failed: 'Thất bại'
+            };
+
+            await notificationService.notifyUser(order.user_id, {
+                type: 'order_status_changed',
+                title: 'Trạng thái đơn hàng đã được cập nhật',
+                message: `Đơn hàng #${order._id.toString().slice(-6).toUpperCase()} đã được cập nhật trạng thái từ "${statusLabels[oldStatus]}" sang "${statusLabels[status]}"`,
+                data: { order_id: order._id },
+                link: `/orders/${order._id}`
+            });
+        }
 
         return order;
     }

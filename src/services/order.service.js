@@ -3,6 +3,7 @@ const orderRepository = require('../repositories/order.repository');
 const cartRepository = require('../repositories/cart.repository');
 const PhysicalProductItem = require('../models/physical-product-item.model');
 const DigitalProductItem = require('../models/digital-product-item.model');
+const notificationService = require('./notification.service');
 
 class OrderService {
 
@@ -173,6 +174,15 @@ class OrderService {
             await cartRepository.clearCart(userId, session);
 
             await session.commitTransaction();
+
+            // ── 6. Gửi thông báo ───────────
+            await notificationService.notifyUser(userId, {
+                type: 'order_created',
+                title: 'Đơn hàng của bạn đã được tạo',
+                message: `Đơn hàng #${order._id.toString().slice(-6).toUpperCase()} đã được tạo thành công, tổng tiền ${total_amount.toLocaleString('vi-VN')}đ`,
+                data: { order_id: order._id },
+                link: `/orders/${order._id}`
+            });
             return order;
 
         } catch (error) {
@@ -248,6 +258,16 @@ class OrderService {
             );
 
             await session.commitTransaction();
+
+            // Gửi thông báo
+            await notificationService.notifyUser(userId, {
+                type: 'order_cancelled',
+                title: 'Đơn hàng của bạn đã bị huỷ',
+                message: `Đơn hàng #${order._id.toString().slice(-6).toUpperCase()} đã bị huỷ`,
+                data: { order_id: order._id },
+                link: `/orders/${order._id}`
+            });
+
             return { message: 'Huỷ đơn hàng thành công' };
         } catch (error) {
             await session.abortTransaction();

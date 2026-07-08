@@ -4,6 +4,7 @@ const orderRepository = require('../repositories/order.repository');
 const PhysicalProductItem = require('../models/physical-product-item.model');
 const DigitalProductItem = require('../models/digital-product-item.model');
 const inventoryRepository = require('../repositories/inventory.repository');
+const notificationService = require('./notification.service');
 
 // Thời gian hết hạn thanh toán chuyển khoản: 30 phút
 const BANK_TRANSFER_EXPIRE_MINUTES = 30;
@@ -175,6 +176,14 @@ class PaymentService {
 
             await session.commitTransaction();
 
+            await notificationService.notifyUser(order.user_id, {
+                type: 'payment_success',
+                title: 'Thanh toán đơn hàng thành công',
+                message: `Đơn hàng #${order._id.toString().slice(-6).toUpperCase()} đã được thanh toán thành công`,
+                data: { order_id: order._id },
+                link: `/orders/${order._id}`
+            });
+
             return { success: true, message: 'Xác nhận thanh toán thành công' };
 
         } catch (error) {
@@ -234,6 +243,14 @@ class PaymentService {
             await this._markItemsSold(order.items, session);
 
             await session.commitTransaction();
+
+            await notificationService.notifyUser(order.user_id, {
+                type: 'cod_confirmed',
+                title: 'Xác nhận COD thành công',
+                message: `Đơn hàng #${order._id.toString().slice(-6).toUpperCase()} đã được xác nhận COD thành công`,
+                data: { order_id: order._id },
+                link: `/orders/${order._id}`
+            });
 
             return { message: 'Xác nhận COD thành công' };
         } catch (error) {

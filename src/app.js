@@ -16,7 +16,7 @@ const staffRoutes = require("./routes/staff.route");
 const uploadRoutes = require("./routes/upload.route");
 const bannerRoutes = require("./routes/banner.route");
 const refundRoutes = require("./routes/refund.route");
-
+const notificationRoutes = require("./routes/notification.route");
 
 const app = express();
 
@@ -57,6 +57,8 @@ app.use("/api/v1/upload", uploadRoutes);
 app.use("/api/v1/banner", bannerRoutes);
 
 app.use("/api/v1/refund", refundRoutes);
+
+app.use("/api/v1/notification", notificationRoutes);
 
 // Error handling middleware (must be last) 
 app.use(errorHandler);

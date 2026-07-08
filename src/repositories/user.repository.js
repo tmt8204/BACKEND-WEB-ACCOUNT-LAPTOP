@@ -1,4 +1,5 @@
 const User = require('../models/user.model');
+const roleRepository = require('./role.repository');
 
 class UserRepository {
   async createUser(userData) {
@@ -77,6 +78,15 @@ class UserRepository {
     try {
       const user = await User.findOne({ googleId: googleId });
       return user;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async findByRoleId(roleId) {
+    try {
+      const users = await User.find({ role: roleId });
+      return users;
     } catch (error) {
       throw error;
     }

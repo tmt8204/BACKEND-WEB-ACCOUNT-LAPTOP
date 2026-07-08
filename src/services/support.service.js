@@ -5,6 +5,7 @@ const userRepository = require('../repositories/user.repository');
 const roleRepository = require('../repositories/role.repository');
 const PhysicalProduct = require('../models/physical-product.model');
 const refundService = require('./refund.service');
+const notificationService = require('./notification.service');
 
 const REOPEN_WINDOW_DAYS = 7;   // số ngày customer được reopen sau khi resolved
 const AUTO_CLOSE_DAYS = 7;      // số ngày tự động close sau khi resolved
@@ -118,6 +119,15 @@ class SupportService {
             is_internal: false
         });
 
+        // 8. Gửi thông báo cho staff/admin
+        await notificationService.notifyStaffAndAdmin({
+            type: 'support_new_ticket',
+            title: 'Có yêu cầu hỗ trợ mới',
+            message: `Ticket ${ticket.ticket_code}: ${title}`,
+            data: { ticket_id: ticket._id },
+            link: `/support/manage/tickets/${ticket._id}`
+        });
+
         return ticket;
     }
 
@@ -163,6 +173,25 @@ class SupportService {
         // Nếu đang chờ customer phản hồi thì chuyển lại in_progress
         if (ticket.status === 'waiting_customer') {
             await supportTicketRepo.updateTicket(ticketId, { status: 'in_progress' });
+        }
+
+        // Báo cho staff được assign (nếu có), nếu chưa assign thì báo chung staff+admin
+        if (ticket.assigned_to) {
+            await notificationService.notifyUser(ticket.assigned_to, {
+                type: 'support_new_message',
+                title: 'Khách hàng vừa trả lời',
+                message: `Ticket ${ticket.ticket_code} có tin nhắn mới từ khách hàng`,
+                data: { ticket_id: ticketId },
+                link: `/support/manage/tickets/${ticketId}`
+            });
+        } else {
+            await notificationService.notifyStaffAndAdmin({
+                type: 'support_new_message',
+                title: 'Khách hàng vừa trả lời',
+                message: `Ticket ${ticket.ticket_code} có tin nhắn mới từ khách hàng`,
+                data: { ticket_id: ticketId },
+                link: `/support/manage/tickets/${ticketId}`
+            });
         }
 
         return message;
@@ -314,6 +343,17 @@ class SupportService {
             await supportTicketRepo.updateTicket(ticketId, { status: 'waiting_customer' });
         }
 
+        // Chỉ báo cho khách nếu tin nhắn không phải nội bộ
+        if (!is_internal) {
+            await notificationService.notifyUser(ticket.user_id, {
+                type: 'support_new_message',
+                title: 'Nhân viên hỗ trợ vừa phản hồi',
+                message: `Ticket ${ticket.ticket_code} có phản hồi mới`,
+                data: { ticket_id: ticketId },
+                link: `/support/tickets/${ticketId}`
+            });
+        }
+
         return message;
     }
 
@@ -327,11 +367,21 @@ class SupportService {
             throw err;
         }
 
-        return await supportTicketRepo.updateTicket(ticketId, {
+        const updated = await supportTicketRepo.updateTicket(ticketId, {
             status: 'resolved',
             resolution_note,
             resolved_at: new Date()
         });
+
+        await notificationService.notifyUser(updated.user_id._id || updated.user_id, {
+            type: 'support_status_changed',
+            title: 'Yêu cầu hỗ trợ đã được giải quyết',
+            message: `Ticket ${updated.ticket_code} đã được giải quyết`,
+            data: { ticket_id: ticketId },
+            link: `/support/tickets/${ticketId}`
+        });
+
+        return updated;
     }
 
     async getStats() {
@@ -404,6 +454,14 @@ class SupportService {
             content: `Yêu cầu đã bị từ chối. Lý do: ${rejection_reason}`,
             attachments: [],
             is_internal: false
+        });
+
+        await notificationService.notifyUser(updated.user_id._id || updated.user_id, {
+            type: 'support_status_changed',
+            title: 'Yêu cầu hỗ trợ bị từ chối',
+            message: `Ticket ${updated.ticket_code} đã bị từ chối. Lý do: ${rejection_reason}`,
+            data: { ticket_id: ticketId },
+            link: `/support/tickets/${ticketId}`
         });
 
         return updated;

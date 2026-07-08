@@ -13,7 +13,7 @@ class RoleRepository {
 
   async findRoleByName(name) {
     try {
-      const role = await Role.findOne({ name: name.toLowerCase() });
+      const role = await Role.findOne({ name: name });
       return role;
     } catch (error) {
       throw error;

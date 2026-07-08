@@ -5,6 +5,7 @@ const paymentRepository = require('../repositories/payment.repository');
 const refundRepository = require('../repositories/refund.repository');
 const inventoryRepository = require('../repositories/inventory.repository');
 const supportTicketRepo = require('../repositories/support-ticket.repository');
+const notificationService = require('./notification.service');
 
 const PhysicalProductItem = require('../models/physical-product-item.model');
 const DigitalProductItem = require('../models/digital-product-item.model');
@@ -190,6 +191,16 @@ class RefundService {
             }
 
             await session.commitTransaction();
+
+            await notificationService.notifyUser(order.user_id, {
+                type: 'refund_processed',
+                title: 'Yêu cầu hoàn tiền của bạn đã được xử lý',
+                message: `Yêu cầu hoàn tiền cho đơn hàng #${order._id.toString().slice(-6).toUpperCase()} đã được xử lý. Số tiền hoàn lại: ${totalRefundAmount.toLocaleString('vi-VN')}đ`,
+                data: { order_id: order._id },
+                link: `/orders/${order._id}`
+            });
+
+            console.log('Da gui thong bao hoan tien cho user:', order.user_id);
 
             return {
                 refund,
