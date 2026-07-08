@@ -1,7 +1,7 @@
 const express = require('express');
 const authController = require('../controllers/auth.controller');
 const validate = require('../middlewares/validate.middleware');
-const { registerSchema, loginSchema, refreshTokenSchema, verifyEmailSchema, newPasswordSchema, verifyOTPSchema, changePasswordSchema } = require('../middlewares/validators/auth.validator');
+const { registerSchema, loginSchema, refreshTokenSchema, verifyEmailSchema, newPasswordSchema, verifyOTPSchema, changePasswordSchema, googleLoginSchema } = require('../middlewares/validators/auth.validator');
 
 const router = express.Router();
 
@@ -11,6 +11,10 @@ router.post('/register', validate(registerSchema), (req, res, next) => {
 
 router.post('/login', validate(loginSchema), (req, res, next) => {
   authController.login(req, res, next);
+});
+
+router.post('/google', validate(googleLoginSchema), (req, res, next) => {
+  authController.googleLogin(req, res, next);
 });
 
 router.post('/refresh-token', validate(refreshTokenSchema), (req, res, next) => {

@@ -15,7 +15,7 @@ class ProductService {
             const physical = { ...physicalData };
             const item = {
                 serial_number: itemData.serial_number,
-                images_urls: itemData.images_urls || [],
+                images_urls: itemData.images || [],
                 status: itemData.status || 'available',
                 sale_price: itemData.sale_price
             };

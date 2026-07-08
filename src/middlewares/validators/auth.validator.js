@@ -1,5 +1,7 @@
 const Joi = require('joi');
 
+const VN_PHONE_REGEX = /^(0|\+84)(3[2-9]|5[2|6|8|9]|7[0|6-9]|8[1-9]|9[0-9])[0-9]{7}$/;
+
 const registerSchema = Joi.object({
   fullname: Joi.string()
     .min(3)
@@ -31,11 +33,11 @@ const registerSchema = Joi.object({
     }),
 
   phone: Joi.string()
-    .pattern(/^[0-9]{10}$/)
+    .pattern(VN_PHONE_REGEX)
     .required()
     .messages({
       'string.empty': 'Số điện thoại không được để trống',
-      'string.pattern.base': 'Số điện thoại phải có 10 chữ số',
+      'string.pattern.base': 'Số điện thoại không đúng định dạng số Việt Nam (vd: 0912345678 hoặc +84912345678)',
       'any.required': 'Số điện thoại là bắt buộc'
     })
 });
@@ -56,6 +58,15 @@ const loginSchema = Joi.object({
         'string.empty': 'Mật khẩu không được để trống',
         'any.required': 'Mật khẩu là bắt buộc'
         })
+});
+
+const googleLoginSchema = Joi.object({
+  idToken: Joi.string()
+    .required()
+    .messages({
+      'string.empty': 'idToken không được để trống',
+      'any.required': 'idToken là bắt buộc'
+    })
 });
 
 const verifyOTPSchema = Joi.object({
@@ -121,6 +132,7 @@ const newPasswordSchema = Joi.object({
 module.exports = {
   registerSchema,
   loginSchema,
+  googleLoginSchema,
   verifyOTPSchema,
   newPasswordSchema,
   refreshTokenSchema,

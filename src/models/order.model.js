@@ -53,7 +53,7 @@ const orderSchema = new mongoose.Schema({
         min: 0
     },
     // null nếu toàn bộ item là digital
-    Processing_address: {
+    shipping_address: {
         type: String,
         default: null
     },

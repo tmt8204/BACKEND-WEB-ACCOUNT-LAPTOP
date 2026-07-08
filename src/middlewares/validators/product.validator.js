@@ -1,5 +1,10 @@
 const Joi = require('joi');
 
+const imageSchema = Joi.object({
+    url: Joi.string().uri().required(),
+    public_id: Joi.string().required()
+});
+
 // ─────────────── CREATE ───────────────
 
 const createPhysicalProductSchema = Joi.object({
@@ -24,7 +29,7 @@ const createPhysicalProductSchema = Joi.object({
     }).required(),
     itemData: Joi.object({
         serial_number: Joi.string().required(),
-        images_urls:   Joi.array().items(Joi.string().uri()).optional(),
+        images_urls:   Joi.array().items(imageSchema).optional(),
         status:        Joi.string().valid('available', 'reserved', 'sold').optional(),
         sale_price:    Joi.number().min(0).required()
     }).required()
@@ -93,7 +98,7 @@ const updateDigitalProductSchema = Joi.object({
 
 const updatePhysicalItemSchema = Joi.object({
     serial_number: Joi.string().optional(),
-    images_urls:   Joi.array().items(Joi.string().uri()).optional(),
+    images_urls:   Joi.array().items(imageSchema).optional(),
     status:        Joi.string().valid('available', 'reserved', 'sold').optional(),
     sale_price:    Joi.number().min(0).optional()
 }).min(1);

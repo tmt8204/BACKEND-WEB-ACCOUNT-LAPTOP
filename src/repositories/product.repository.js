@@ -4,6 +4,7 @@ const PhysicalProduct = require('../models/physical-product.model');
 const PhysicalProductItem = require('../models/physical-product-item.model');
 const DigitalProduct = require('../models/digital-product.model');
 const DigitalProductItem = require('../models/digital-product-item.model');
+const cloudinaryUtil = require('../utils/cloudinary.util');
 
 class ProductRepository {
 
@@ -181,7 +182,14 @@ class ProductRepository {
         session.startTransaction();
         try {
             const physical = await PhysicalProduct.findOne({ product_id: productId }).session(session);
+            let publicIdsToDelete = [];
+
             if (physical) {
+                const items = await PhysicalProductItem.find({ physical_product_id: physical._id }).session(session);
+                items.forEach(item => {
+                    item.images?.forEach(img => publicIdsToDelete.push(img.public_id));
+                });
+
                 await PhysicalProductItem.deleteMany({ physical_product_id: physical._id }, { session });
                 await PhysicalProduct.deleteOne({ _id: physical._id }, { session });
             }
@@ -189,6 +197,13 @@ class ProductRepository {
             if (!deleted) throw Object.assign(new Error('Sản phẩm không tồn tại'), { statusCode: 404 });
 
             await session.commitTransaction();
+
+            if(publicIdsToDelete.length > 0) {
+                cloudinaryUtil.deleteMultipleImages(publicIdsToDelete).catch(err => {
+                    console.error('Lỗi khi xoá ảnh trên Cloudinary:', err);
+                });
+            }
+
             return deleted;
         } catch (error) {
             await session.abortTransaction();

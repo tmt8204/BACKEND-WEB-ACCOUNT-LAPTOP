@@ -1,13 +1,24 @@
 const Joi = require('joi');
 
+const VN_PHONE_REGEX = /^(0|\+84)(3[2-9]|5[2|6|8|9]|7[0|6-9]|8[1-9]|9[0-9])[0-9]{7}$/;
+
 const updateProfileSchema = Joi.object({
     fullname: Joi.string()
-            .min(4)
-            .max(50)
-            .optional(),
+        .min(3)
+        .required()
+        .messages({
+        'string.empty': 'Họ tên không được để trống',
+        'string.min': 'Họ tên phải có ít nhất 3 ký tự',
+        'any.required': 'Họ tên là bắt buộc'
+        }),
     phone: Joi.string()
-            .pattern(/^\d{10,15}$/)
-            .optional(),
+        .pattern(VN_PHONE_REGEX)
+        .required()
+        .messages({
+        'string.empty': 'Số điện thoại không được để trống',
+        'string.pattern.base': 'Số điện thoại không đúng định dạng số Việt Nam (vd: 0912345678 hoặc +84912345678)',
+        'any.required': 'Số điện thoại là bắt buộc'
+        }),
     address: Joi.string()
             .max(200)
             .optional(),

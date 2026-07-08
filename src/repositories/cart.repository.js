@@ -14,6 +14,24 @@ class CartRepository {
         }
     }
 
+    async findCartOrCreateCart(userId) {
+        try{
+            return await Cart.findOneAndUpdate(
+                { user_id: userId },
+                { $setOnInsert: { user_id: userId, items: [] } },
+                {
+                    upsert: true,
+                    returnDocument: 'after'
+                }
+            ).populate({
+                path: 'items.product_id',
+                select: 'name base_price product_type status is_active'
+            });
+        } catch (error) {
+            throw error;
+        }
+    }
+
     async createCart(userId) {
         try {
             const cart = new Cart({ user_id: userId, items: [] });

@@ -12,13 +12,13 @@ class OrderController {
     async createOrder(req, res, next)  {
         try {
             const userId = req.user.id;
-            const { items, payment_method, Processing_address, note } = req.body;
+            const { items, payment_method, shipping_address, note } = req.body;
 
             // 1. Tạo order (lock items)
             const order = await orderService.createOrder(userId, {
                 items,
                 payment_method,
-                Processing_address,
+                shipping_address,
                 note
             });
 
