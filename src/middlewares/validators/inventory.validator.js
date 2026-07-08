@@ -1,12 +1,17 @@
 const Joi = require('joi');
 
+const imageSchema = Joi.object({
+    url: Joi.string().uri().required(),
+    public_id: Joi.string().required()
+});
+
 // ── Nhập kho vật lý ─────────────────────────────────────────────────────────
 const stockInPhysicalSchema = Joi.object({
     serial_number: Joi.string().required().messages({
         'string.empty': 'Serial number không được để trống',
         'any.required': 'Serial number là bắt buộc'
     }),
-    images_urls: Joi.array().items(Joi.string().uri()).optional(),
+    image: imageSchema.optional(),
     sale_price: Joi.number().min(0).required().messages({
         'number.base':  'Giá bán phải là số',
         'number.min':   'Giá bán không được âm',

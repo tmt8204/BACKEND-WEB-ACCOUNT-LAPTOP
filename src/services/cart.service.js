@@ -6,7 +6,7 @@ const Product = require('../models/product.model');
 class CartService {
     async getCartByUserId(userId) {
         try {
-            let cart = await cartRepository.findCartByUserId(userId);
+            let cart = await cartRepository.findCartOrCreateCart(userId);
             if (!cart) {
                 cart = await cartRepository.createCart(userId);
             }
@@ -84,7 +84,7 @@ class CartService {
             }
 
             // Kiểm tra item đã có trong cart chưa
-            let cart = await cartRepository.findCartByUserId(userId);
+            let cart = await cartRepository.findCartOrCreateCart(userId);
             if (!cart) {
                 cart = await cartRepository.createCart(userId);
             }
@@ -102,8 +102,6 @@ class CartService {
             const cartItem = {
                 product_id: product._id,
                 item_id: item._id,
-                // CartItemSchema.item_type enum: 'physical' | 'digital'
-                // KHÔNG dùng 'PhysicalProductItem' / 'DigitalProductItem' ở đây
                 item_type: product_type,
                 quantity,
                 sale_price: item.sale_price
